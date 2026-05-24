@@ -1,66 +1,152 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Seeker Registration</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Register Candidate</title>
+  <script src="app.js"></script>
+
+  <style>
+    body{font-family:Arial;background:#f4f4f4;padding:30px}
+    .box{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px}
+    input,select{width:100%;padding:10px;margin:8px 0}
+    button{width:100%;padding:12px;background:#007bff;color:#fff;border:none}
+  </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="box">
 
-    <h1>Job Seeker Registration</h1>
+<h2>Job Seeker Registration</h2>
 
-    <form id="candidateForm">
+<input id="name" placeholder="Name">
+<input id="surname" placeholder="Surname">
+<input id="email" placeholder="Email">
+<input id="phone" placeholder="Phone">
+<input id="address" placeholder="Address">
+<input id="hourlyRate" placeholder="Hourly Rate">
 
-        <!-- BASIC DETAILS -->
-        <input type="text" id="name" placeholder="Name" required>
+<!-- PROFESSION DROPDOWN -->
+<select id="profession"></select>
 
-        <input type="text" id="surname" placeholder="Surname" required>
+<!-- QUESTIONS -->
+<input id="q1" placeholder="Q1">
+<input id="q2" placeholder="Q2">
+<input id="q3" placeholder="Q3">
+<input id="q4" placeholder="Q4">
+<input id="q5" placeholder="Q5">
+<input id="q6" placeholder="Q6">
 
-        <input type="email" id="email" placeholder="Email" required>
+<!-- FILE UPLOAD -->
+<input type="file" id="files" multiple>
 
-        <input type="text" id="phone" placeholder="Phone Number" required>
-
-        <input type="text" id="address" placeholder="Address" required>
-
-        <input type="number" id="hourlyRate" placeholder="Hourly Rate Required" required>
-
-        <!-- PROFESSION (DYNAMIC) -->
-        <select id="profession" required>
-            <option value="">Loading professions...</option>
-        </select>
-
-        <!-- DYNAMIC QUESTIONS WILL LOAD HERE -->
-        <div id="dynamicQuestions"></div>
-
-        <!-- FILE UPLOAD -->
-        <h3>Upload Required Documents</h3>
-
-        <input type="file" id="files" multiple>
-
-        <small>
-            Upload CV, certificates, or required documents.
-        </small>
-
-        <br><br>
-
-        <!-- SUBMIT -->
-        <button type="submit" class="btn">
-            Submit Registration
-        </button>
-
-    </form>
-
-    <br>
-
-    <a href="index.html" class="btn secondary">
-        Back
-    </a>
+<button onclick="submitCandidate()">Submit</button>
 
 </div>
 
-<script src="app.js"></script>
+<script>
+
+const scriptURL =
+  "PASTE_YOUR_APPS_SCRIPT_URL";
+
+window.onload = loadProfessions;
+
+async function loadProfessions(){
+
+  const res = await fetch(scriptURL + "?action=getProfessions");
+  const data = await res.json();
+
+  const dropdown = document.getElementById("profession");
+
+  dropdown.innerHTML =
+    "<option value=''>Select Profession</option>";
+
+  data.forEach(p => {
+
+    const opt = document.createElement("option");
+    opt.value = p.profession;
+    opt.textContent = p.profession;
+
+    dropdown.appendChild(opt);
+  });
+}
+
+/* FILE ENCODER */
+function encodeFiles(input){
+
+  return Promise.all(
+    [...input.files].map(file => {
+
+      return new Promise(resolve => {
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+
+          resolve({
+            name:file.name,
+            type:file.type,
+            base64:reader.result.split(",")[1]
+          });
+
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+    })
+  );
+}
+
+async function submitCandidate(){
+
+  try{
+
+    let files = [];
+
+    const fileInput =
+      document.getElementById("files");
+
+    if(fileInput.files.length > 0){
+      files = await encodeFiles(fileInput);
+    }
+
+    const res = await fetch(scriptURL, {
+      method:"POST",
+      body: JSON.stringify({
+        action:"registerCandidate",
+        name:document.getElementById("name").value,
+        surname:document.getElementById("surname").value,
+        email:document.getElementById("email").value,
+        phone:document.getElementById("phone").value,
+        address:document.getElementById("address").value,
+        hourlyRate:document.getElementById("hourlyRate").value,
+        profession:document.getElementById("profession").value,
+        q1:document.getElementById("q1").value,
+        q2:document.getElementById("q2").value,
+        q3:document.getElementById("q3").value,
+        q4:document.getElementById("q4").value,
+        q5:document.getElementById("q5").value,
+        q6:document.getElementById("q6").value,
+        files:files
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("Submitted successfully!");
+      window.location.href = "index.html";
+    } else {
+      alert("Submission failed");
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Error submitting form");
+  }
+}
+
+</script>
 
 </body>
 </html>
