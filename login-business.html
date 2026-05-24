@@ -1,36 +1,122 @@
-if(data.action === "loginBusiness"){
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Business Login</title>
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("Business");
-
-  const rows = sheet.getDataRange().getValues();
-
-  const email = data.email;
-  const password = data.password;
-
-  for(let i = 1; i < rows.length; i++){
-
-    const rowEmail = rows[i][3];      // Column D
-    const rowPassword = rows[i][14];  // Column O ✅ FIXED
-
-    if(rowEmail === email && rowPassword === password){
-
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          success: true,
-          name: rows[i][6],        // Business Name (adjust if needed)
-          email: rowEmail,
-          businessType: rows[i][7],
-          status: rows[i][10]
-        })
-      ).setMimeType(ContentService.MimeType.JSON);
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      padding:30px;
     }
+
+    .container{
+      max-width:500px;
+      margin:auto;
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+    }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      background:#007bff;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#0056b3;
+    }
+
+    .back{
+      display:block;
+      margin-top:15px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>Business Login</h2>
+
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
+
+  <button onclick="loginBusiness()">Login</button>
+
+  <a href="login.html" class="back">Back</a>
+
+</div>
+
+<script>
+
+const scriptURL =
+  "https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
+
+/* =========================================
+   BUSINESS LOGIN
+========================================= */
+async function loginBusiness(){
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if(!email || !password){
+    alert("Please enter email and password");
+    return;
   }
 
-  return ContentService.createTextOutput(
-    JSON.stringify({
-      success: false,
-      message: "Invalid login"
-    })
-  ).setMimeType(ContentService.MimeType.JSON);
+  try{
+
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "loginBusiness",
+        email: email,
+        password: password
+      })
+    });
+
+    const data = await res.json();
+
+    console.log("LOGIN RESPONSE:", data);
+
+    if(data.success){
+
+      // store session locally
+      localStorage.setItem("businessUser", JSON.stringify(data));
+
+      alert("Login successful!");
+
+      // redirect to dashboard (you will build this next)
+      window.location.href = "business-dashboard.html";
+
+    } else {
+      alert(data.message || "Invalid login");
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Server error. Try again.");
+  }
 }
+
+</script>
+
+</body>
+</html>
