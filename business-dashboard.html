@@ -4,6 +4,7 @@
   <title>Business Dashboard</title>
 
   <style>
+
     body{
       font-family: Arial;
       background:#f4f4f4;
@@ -14,23 +15,31 @@
       max-width:700px;
       margin:auto;
       background:#fff;
-      padding:20px;
+      padding:25px;
       border-radius:10px;
     }
 
-    input, select, textarea{
+    h1,h2{
+      margin-top:0;
+    }
+
+    input,
+    select,
+    textarea{
       width:100%;
-      padding:10px;
+      padding:12px;
       margin:10px 0;
+      box-sizing:border-box;
     }
 
     button{
       width:100%;
-      padding:12px;
+      padding:14px;
       background:#28a745;
       color:white;
       border:none;
       cursor:pointer;
+      font-size:16px;
     }
 
     button:hover{
@@ -39,10 +48,17 @@
 
     .card{
       background:#f8f9fa;
-      padding:10px;
-      margin-top:10px;
-      border-radius:6px;
+      padding:15px;
+      margin-top:15px;
+      border-radius:8px;
+      border:1px solid #ddd;
     }
+
+    .status{
+      font-weight:bold;
+      margin-top:10px;
+    }
+
   </style>
 </head>
 
@@ -50,106 +66,255 @@
 
 <div class="container">
 
-  <h2>Business Dashboard</h2>
+  <h1>Business Dashboard</h1>
 
-  <p id="welcome"></p>
+  <p>
+    MVP Test Mode
+  </p>
 
   <hr>
 
-  <h3>Create Shift / Job Request</h3>
+  <h2>Create Shift</h2>
 
-  <select id="profession">
+  <!-- PROFESSION -->
+  <select id="profession" required>
     <option value="">Select Profession</option>
     <option value="Dentist">Dentist</option>
     <option value="Dental Assistant">Dental Assistant</option>
   </select>
 
-  <textarea id="notes" placeholder="Shift details / requirements"></textarea>
+  <!-- DATE -->
+  <input type="date" id="shiftDate">
 
-  <button onclick="createShift()">Post Shift</button>
+  <!-- START -->
+  <input type="time" id="startTime">
+
+  <!-- END -->
+  <input type="time" id="endTime">
+
+  <!-- HOURS -->
+  <input
+    type="number"
+    id="hours"
+    placeholder="Hours Required"
+  >
+
+  <!-- RATE -->
+  <input
+    type="number"
+    id="rate"
+    placeholder="Rate Offered Per Hour"
+  >
+
+  <!-- NOTES -->
+  <textarea
+    id="notes"
+    placeholder="Shift requirements or notes"
+  ></textarea>
+
+  <!-- BUTTON -->
+  <button onclick="createShift()">
+    Post Shift
+  </button>
 
   <hr>
 
-  <h3>Your Shifts</h3>
+  <h2>Your Shifts</h2>
+
   <div id="shiftList"></div>
 
 </div>
 
 <script>
 
+/* =========================================
+   APPS SCRIPT URL
+========================================= */
+
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
+"https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
 
-let user = JSON.parse(localStorage.getItem("businessUser") || "{}");
+/* =========================================
+   TEMP BUSINESS USER
+========================================= */
 
-document.getElementById("welcome").innerText =
-  "Welcome " + (user.name || "Business");
+const businessUser = {
+  email: "testbusiness@gmail.com",
+  name: "Demo Dental Practice"
+};
 
 /* =========================================
    CREATE SHIFT
 ========================================= */
+
 async function createShift(){
 
-  const profession = document.getElementById("profession").value;
-  const notes = document.getElementById("notes").value;
+  try{
 
-  if(!profession){
-    alert("Select profession");
-    return;
-  }
+    const payload = {
 
-  const res = await fetch(scriptURL, {
-    method:"POST",
-    headers: {
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      action:"createShift",
-      email:user.email,
-      name:user.name,
-      profession:profession,
-      notes:notes
-    })
-  });
+      action: "createShift",
 
-  const data = await res.json();
+      email: businessUser.email,
 
-  if(data.success){
-    alert("Shift posted!");
-    loadShifts();
-  } else {
-    alert("Error posting shift");
+      name: businessUser.name,
+
+      profession:
+        document.getElementById("profession").value,
+
+      shiftDate:
+        document.getElementById("shiftDate").value,
+
+      startTime:
+        document.getElementById("startTime").value,
+
+      endTime:
+        document.getElementById("endTime").value,
+
+      hours:
+        document.getElementById("hours").value,
+
+      rate:
+        document.getElementById("rate").value,
+
+      notes:
+        document.getElementById("notes").value
+    };
+
+    console.log(payload);
+
+    const response = await fetch(scriptURL, {
+
+      method: "POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body: JSON.stringify(payload)
+
+    });
+
+    const data = await response.json();
+
+    console.log(data);
+
+    if(data.success){
+
+      alert("Shift posted successfully!");
+
+      document.getElementById("profession").value = "";
+      document.getElementById("shiftDate").value = "";
+      document.getElementById("startTime").value = "";
+      document.getElementById("endTime").value = "";
+      document.getElementById("hours").value = "";
+      document.getElementById("rate").value = "";
+      document.getElementById("notes").value = "";
+
+      loadShifts();
+
+    } else {
+
+      alert("Failed to create shift");
+    }
+
+  } catch(err){
+
+    console.error(err);
+
+    alert("Server error");
   }
 }
 
 /* =========================================
    LOAD SHIFTS
 ========================================= */
+
 async function loadShifts(){
 
-  const res = await fetch(
-    scriptURL + "?action=getShifts&email=" + user.email
-  );
+  try{
 
-  const data = await res.json();
+    const response = await fetch(
 
-  const container = document.getElementById("shiftList");
-  container.innerHTML = "";
+      scriptURL +
+      "?action=getShifts&email=" +
+      encodeURIComponent(businessUser.email)
 
-  data.forEach(s => {
+    );
 
-    const div = document.createElement("div");
-    div.className = "card";
+    const data = await response.json();
 
-    div.innerHTML = `
-      <b>${s.profession}</b><br>
-      ${s.notes}<br>
-      <small>Status: ${s.status}</small>
-    `;
+    console.log(data);
 
-    container.appendChild(div);
-  });
+    const container =
+      document.getElementById("shiftList");
+
+    container.innerHTML = "";
+
+    if(data.length === 0){
+
+      container.innerHTML =
+        "<p>No shifts posted yet.</p>";
+
+      return;
+    }
+
+    data.forEach(shift => {
+
+      const div = document.createElement("div");
+
+      div.className = "card";
+
+      div.innerHTML = `
+
+        <h3>${shift.profession}</h3>
+
+        <p>
+          <b>Date:</b> ${shift.shiftDate}
+        </p>
+
+        <p>
+          <b>Time:</b>
+          ${shift.startTime}
+          -
+          ${shift.endTime}
+        </p>
+
+        <p>
+          <b>Hours:</b>
+          ${shift.hours}
+        </p>
+
+        <p>
+          <b>Rate:</b>
+          $${shift.rate}/hr
+        </p>
+
+        <p>
+          <b>Notes:</b>
+          ${shift.notes}
+        </p>
+
+        <p class="status">
+          Status:
+          ${shift.status}
+        </p>
+
+      `;
+
+      container.appendChild(div);
+
+    });
+
+  } catch(err){
+
+    console.error(err);
+  }
 }
+
+/* =========================================
+   INIT
+========================================= */
 
 loadShifts();
 
