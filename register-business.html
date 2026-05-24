@@ -1,45 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Register Business</title>
-<link rel="stylesheet" href="style.css">
+  <title>Register Business</title>
+  <script src="app.js"></script>
+
+  <style>
+    body{font-family:Arial;background:#f4f4f4;padding:30px}
+    .box{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px}
+    input,select{width:100%;padding:10px;margin:8px 0}
+    button{width:100%;padding:12px;background:#28a745;color:#fff;border:none}
+  </style>
 </head>
+
 <body>
 
-<div class="container">
+<div class="box">
 
-<h1>Register Business</h1>
+<h2>Business Registration</h2>
 
-<form id="businessForm">
+<input id="name" placeholder="Name">
+<input id="surname" placeholder="Surname">
+<input id="email" placeholder="Email">
+<input id="phone" placeholder="Phone">
+<input id="address" placeholder="Business Address">
+<input id="businessName" placeholder="Business Name">
 
-<input type="text" id="businessFirstName" placeholder="Name" required>
+<!-- BUSINESS TYPE -->
+<select id="businessType"></select>
 
-<input type="text" id="businessSurname" placeholder="Surname" required>
+<!-- FILES -->
+<input type="file" id="files" multiple>
 
-<input type="email" id="businessEmail" placeholder="Email" required>
-
-<input type="text" id="businessPhone" placeholder="Phone Number" required>
-
-<input type="text" id="businessAddress" placeholder="Business Address" required>
-
-<input type="text" id="businessName" placeholder="Business Name" required>
-
-<select id="businessType">
-<option value="">Loading business types...</option>
-</select>
-<div id="businessRequiredFiles"></div>
-
-<button type="submit" class="btn">
-Submit Business Registration
-</button>
-
-</form>
-
-<a href="index.html" class="btn secondary">Back</a>
+<button onclick="submitBusiness()">Submit</button>
 
 </div>
 
-<script src="app.js"></script>
+<script>
+
+const scriptURL =
+  "PASTE_YOUR_APPS_SCRIPT_URL";
+
+window.onload = loadBusinessTypes;
+
+async function loadBusinessTypes(){
+
+  const res = await fetch(scriptURL + "?action=getBusinessTypes");
+  const data = await res.json();
+
+  const dropdown =
+    document.getElementById("businessType");
+
+  dropdown.innerHTML =
+    "<option value=''>Select Business Type</option>";
+
+  data.forEach(b => {
+
+    const opt = document.createElement("option");
+    opt.value = b.businessType;
+    opt.textContent = b.businessType;
+
+    dropdown.appendChild(opt);
+  });
+}
+
+/* FILE ENCODER */
+function encodeFiles(input){
+
+  return Promise.all(
+    [...input.files].map(file => {
+
+      return new Promise(resolve => {
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+
+          resolve({
+            name:file.name,
+            type:file.type,
+            base64:reader.result.split(",")[1]
+          });
+
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+    })
+  );
+}
+
+async function submitBusiness(){
+
+  try{
+
+    let files = [];
+
+    const fileInput =
+      document.getElementById("files");
+
+    if(fileInput.files.length > 0){
+      files = await encodeFiles(fileInput);
+    }
+
+    const res = await fetch(scriptURL, {
+      method:"POST",
+      body: JSON.stringify({
+        action:"registerBusiness",
+        name:document.getElementById("name").value,
+        surname:document.getElementById("surname").value,
+        email:document.getElementById("email").value,
+        phone:document.getElementById("phone").value,
+        address:document.getElementById("address").value,
+        businessName:document.getElementById("businessName").value,
+        businessType:document.getElementById("businessType").value,
+        files:files
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("Business submitted successfully!");
+      window.location.href = "index.html";
+    } else {
+      alert("Submission failed");
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Error submitting form");
+  }
+}
+
+</script>
 
 </body>
 </html>
