@@ -47,36 +47,28 @@
 
   <form id="candidateForm">
 
-    <!-- BASIC DETAILS -->
     <input type="text" id="name" placeholder="Name" required>
     <input type="text" id="surname" placeholder="Surname" required>
     <input type="email" id="email" placeholder="Email" required>
-    <input type="text" id="phone" placeholder="Phone Number" required>
+    <input type="text" id="phone" placeholder="Phone" required>
     <input type="text" id="address" placeholder="Address" required>
-    <input type="number" id="hourlyRate" placeholder="Hourly Rate Required" required>
+    <input type="number" id="hourlyRate" placeholder="Hourly Rate" required>
 
-    <!-- PROFESSION -->
     <select id="profession" required>
       <option value="">Loading professions...</option>
     </select>
 
-    <!-- DYNAMIC QUESTIONS -->
     <div id="dynamicQuestions"></div>
 
-    <!-- FILE UPLOAD -->
-    <h3>Upload Documents</h3>
+    <h3>Upload Files</h3>
     <input type="file" id="files" multiple>
 
-    <small>You can upload multiple files (CV, certificates, etc.)</small>
-
     <br><br>
-
-    <button type="submit">Submit Registration</button>
+    <button type="submit">Submit</button>
 
   </form>
 
   <br>
-
   <a href="index.html">Back</a>
 
 </div>
@@ -96,6 +88,8 @@ async function loadProfessions(){
     const res = await fetch(scriptURL + "?action=getProfessions");
     const data = await res.json();
 
+    console.log("PROFESSIONS:", data);
+
     const dropdown = document.getElementById("profession");
 
     dropdown.innerHTML =
@@ -111,7 +105,7 @@ async function loadProfessions(){
     });
 
   } catch(err){
-    console.error("Profession load error:", err);
+    console.error("Profession load failed:", err);
   }
 }
 
@@ -138,30 +132,27 @@ async function loadQuestions(profession){
 
     for(let i=1;i<=6;i++){
 
-      const q = selected["q"+i];
+      if(selected["q"+i]){
 
-      if(q){
+        const input =
+          document.createElement("input");
 
-        container.innerHTML += `
-          <input type="text"
-                 id="q${i}"
-                 placeholder="${q}">
-        `;
+        input.placeholder = selected["q"+i];
+        input.id = "q"+i;
+
+        container.appendChild(input);
       }
     }
 
   } catch(err){
-    console.error("Question load error:", err);
+    console.error(err);
   }
 }
 
 /* =========================
-   FILE ENCODER (MULTIPLE FILES)
+   FILE ENCODER
 ========================= */
 function encodeFiles(input){
-
-  if(!input || input.files.length === 0)
-    return Promise.resolve([]);
 
   return Promise.all(
     [...input.files].map(file => {
@@ -173,9 +164,9 @@ function encodeFiles(input){
         reader.onload = () => {
 
           resolve({
-            name: file.name,
-            type: file.type,
-            base64: reader.result.split(",")[1]
+            name:file.name,
+            type:file.type,
+            base64:reader.result.split(",")[1]
           });
 
         };
@@ -209,14 +200,6 @@ document.getElementById("candidateForm")
       address:document.getElementById("address").value,
       hourlyRate:document.getElementById("hourlyRate").value,
       profession:document.getElementById("profession").value,
-
-      q1:document.getElementById("q1")?.value || "",
-      q2:document.getElementById("q2")?.value || "",
-      q3:document.getElementById("q3")?.value || "",
-      q4:document.getElementById("q4")?.value || "",
-      q5:document.getElementById("q5")?.value || "",
-      q6:document.getElementById("q6")?.value || "",
-
       files:files
     };
 
@@ -228,27 +211,24 @@ document.getElementById("candidateForm")
     const data = await res.json();
 
     if(data.success){
-
-      alert("Registration successful!");
-
+      alert("Submitted successfully!");
       window.location.href = "index.html";
-
     } else {
-
       alert("Submission failed");
     }
 
   } catch(err){
-
     console.error(err);
     alert("Error submitting form");
   }
 });
 
 /* =========================
-   INIT ON LOAD
+   INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
+
+  console.log("PAGE LOADED");
 
   loadProfessions();
 
