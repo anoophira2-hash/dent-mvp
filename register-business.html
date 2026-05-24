@@ -55,12 +55,10 @@
     <input type="text" id="address" placeholder="Business Address" required>
     <input type="text" id="businessName" placeholder="Business Name" required>
 
-    <!-- DROPDOWN -->
     <select id="businessType" required>
       <option value="">Loading business types...</option>
     </select>
 
-    <!-- FILES -->
     <h3>Upload Documents</h3>
     <input type="file" id="files" multiple>
 
@@ -81,14 +79,10 @@ const scriptURL =
   "https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
 
 /* =========================
-   INIT (CRITICAL)
+   INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-
-  console.log("BUSINESS PAGE LOADED");
-
   loadBusinessTypes();
-
 });
 
 /* =========================
@@ -96,41 +90,29 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================= */
 async function loadBusinessTypes(){
 
-  try{
+  try {
 
-    const dropdown =
-      document.getElementById("businessType");
+    const res = await fetch(scriptURL + "?action=getBusinessTypes");
+    const text = await res.text();
 
-    if(!dropdown){
-      console.error("Dropdown not found");
-      return;
-    }
+    console.log("RAW TYPES:", text);
 
-    const res = await fetch(
-      scriptURL + "?action=getBusinessTypes"
-    );
+    const data = JSON.parse(text);
 
-    const data = await res.json();
-
-    console.log("BUSINESS TYPES:", data);
+    const dropdown = document.getElementById("businessType");
 
     dropdown.innerHTML =
       "<option value=''>Select Business Type</option>";
 
     data.forEach(item => {
-
       const opt = document.createElement("option");
       opt.value = item.businessType;
       opt.textContent = item.businessType;
-
       dropdown.appendChild(opt);
     });
 
-    console.log("DROPDOWN LOADED");
-
   } catch(err){
-
-    console.error("LOAD ERROR:", err);
+    console.error("Business type load failed:", err);
     alert("Failed to load business types");
   }
 }
@@ -151,13 +133,11 @@ function encodeFiles(input){
         const reader = new FileReader();
 
         reader.onload = () => {
-
           resolve({
             name: file.name,
             type: file.type,
             base64: reader.result.split(",")[1]
           });
-
         };
 
         reader.readAsDataURL(file);
@@ -168,14 +148,14 @@ function encodeFiles(input){
 }
 
 /* =========================
-   SUBMIT FORM
+   SUBMIT FORM (FIXED)
 ========================= */
 document.getElementById("businessForm")
 .addEventListener("submit", async function(e){
 
   e.preventDefault();
 
-  try{
+  try {
 
     const files =
       await encodeFiles(document.getElementById("files"));
@@ -192,24 +172,40 @@ document.getElementById("businessForm")
       files: files
     };
 
+    console.log("SENDING:", payload);
+
     const res = await fetch(scriptURL, {
       method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+    const text = await res.text();
+
+    console.log("RAW RESPONSE:", text);
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      throw new Error("Server did not return valid JSON");
+    }
+
+    console.log("PARSED RESPONSE:", data);
 
     if(data.success){
       alert("Business registered successfully!");
       window.location.href = "index.html";
     } else {
-      alert("Submission failed");
+      alert("Submission failed: " + (data.message || "unknown error"));
     }
 
   } catch(err){
-
-    console.error(err);
-    alert("Error submitting form");
+    console.error("SUBMIT ERROR:", err);
+    alert("Server error - check console");
   }
 });
 
