@@ -1,66 +1,266 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Seeker Registration</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Job Seeker Registration</title>
+
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      padding:30px;
+    }
+
+    .container{
+      max-width:600px;
+      margin:auto;
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+    }
+
+    input,select{
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      background:#007bff;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#0056b3;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <h1>Job Seeker Registration</h1>
+  <h1>Job Seeker Registration</h1>
 
-    <form id="candidateForm">
+  <form id="candidateForm">
 
-        <!-- BASIC DETAILS -->
-        <input type="text" id="name" placeholder="Name" required>
+    <!-- BASIC DETAILS -->
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="text" id="surname" placeholder="Surname" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="phone" placeholder="Phone Number" required>
+    <input type="text" id="address" placeholder="Address" required>
+    <input type="number" id="hourlyRate" placeholder="Hourly Rate Required" required>
 
-        <input type="text" id="surname" placeholder="Surname" required>
+    <!-- PROFESSION -->
+    <select id="profession" required>
+      <option value="">Loading professions...</option>
+    </select>
 
-        <input type="email" id="email" placeholder="Email" required>
+    <!-- DYNAMIC QUESTIONS -->
+    <div id="dynamicQuestions"></div>
 
-        <input type="text" id="phone" placeholder="Phone Number" required>
+    <!-- FILE UPLOAD -->
+    <h3>Upload Documents</h3>
+    <input type="file" id="files" multiple>
 
-        <input type="text" id="address" placeholder="Address" required>
+    <small>You can upload multiple files (CV, certificates, etc.)</small>
 
-        <input type="number" id="hourlyRate" placeholder="Hourly Rate Required" required>
+    <br><br>
 
-        <!-- PROFESSION (DYNAMIC) -->
-        <select id="profession" required>
-            <option value="">Loading professions...</option>
-        </select>
+    <button type="submit">Submit Registration</button>
 
-        <!-- DYNAMIC QUESTIONS WILL LOAD HERE -->
-        <div id="dynamicQuestions"></div>
+  </form>
 
-        <!-- FILE UPLOAD -->
-        <h3>Upload Required Documents</h3>
+  <br>
 
-        <input type="file" id="files" multiple>
-
-        <small>
-            Upload CV, certificates, or required documents.
-        </small>
-
-        <br><br>
-
-        <!-- SUBMIT -->
-        <button type="submit" class="btn">
-            Submit Registration
-        </button>
-
-    </form>
-
-    <br>
-
-    <a href="index.html" class="btn secondary">
-        Back
-    </a>
+  <a href="index.html">Back</a>
 
 </div>
 
-<script src="app.js"></script>
+<script>
+
+const scriptURL =
+  "https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
+
+/* =========================
+   LOAD PROFESSIONS
+========================= */
+async function loadProfessions(){
+
+  try{
+
+    const res = await fetch(scriptURL + "?action=getProfessions");
+    const data = await res.json();
+
+    const dropdown = document.getElementById("profession");
+
+    dropdown.innerHTML =
+      "<option value=''>Select Profession</option>";
+
+    data.forEach(p => {
+
+      const opt = document.createElement("option");
+      opt.value = p.profession;
+      opt.textContent = p.profession;
+
+      dropdown.appendChild(opt);
+    });
+
+  } catch(err){
+    console.error("Profession load error:", err);
+  }
+}
+
+/* =========================
+   LOAD QUESTIONS
+========================= */
+async function loadQuestions(profession){
+
+  try{
+
+    const res = await fetch(scriptURL + "?action=getProfessions");
+    const data = await res.json();
+
+    const selected = data.find(p =>
+      p.profession === profession
+    );
+
+    const container =
+      document.getElementById("dynamicQuestions");
+
+    container.innerHTML = "";
+
+    if(!selected) return;
+
+    for(let i=1;i<=6;i++){
+
+      const q = selected["q"+i];
+
+      if(q){
+
+        container.innerHTML += `
+          <input type="text"
+                 id="q${i}"
+                 placeholder="${q}">
+        `;
+      }
+    }
+
+  } catch(err){
+    console.error("Question load error:", err);
+  }
+}
+
+/* =========================
+   FILE ENCODER (MULTIPLE FILES)
+========================= */
+function encodeFiles(input){
+
+  if(!input || input.files.length === 0)
+    return Promise.resolve([]);
+
+  return Promise.all(
+    [...input.files].map(file => {
+
+      return new Promise(resolve => {
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+
+          resolve({
+            name: file.name,
+            type: file.type,
+            base64: reader.result.split(",")[1]
+          });
+
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+    })
+  );
+}
+
+/* =========================
+   FORM SUBMIT
+========================= */
+document.getElementById("candidateForm")
+.addEventListener("submit", async function(e){
+
+  e.preventDefault();
+
+  try{
+
+    const files =
+      await encodeFiles(document.getElementById("files"));
+
+    const payload = {
+      action:"registerCandidate",
+      name:document.getElementById("name").value,
+      surname:document.getElementById("surname").value,
+      email:document.getElementById("email").value,
+      phone:document.getElementById("phone").value,
+      address:document.getElementById("address").value,
+      hourlyRate:document.getElementById("hourlyRate").value,
+      profession:document.getElementById("profession").value,
+
+      q1:document.getElementById("q1")?.value || "",
+      q2:document.getElementById("q2")?.value || "",
+      q3:document.getElementById("q3")?.value || "",
+      q4:document.getElementById("q4")?.value || "",
+      q5:document.getElementById("q5")?.value || "",
+      q6:document.getElementById("q6")?.value || "",
+
+      files:files
+    };
+
+    const res = await fetch(scriptURL, {
+      method:"POST",
+      body:JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+
+      alert("Registration successful!");
+
+      window.location.href = "index.html";
+
+    } else {
+
+      alert("Submission failed");
+    }
+
+  } catch(err){
+
+    console.error(err);
+    alert("Error submitting form");
+  }
+});
+
+/* =========================
+   INIT ON LOAD
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadProfessions();
+
+  document.getElementById("profession")
+    .addEventListener("change", function(){
+
+      loadQuestions(this.value);
+    });
+
+});
+
+</script>
 
 </body>
 </html>
