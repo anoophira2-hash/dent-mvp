@@ -1,1 +1,36 @@
+if(data.action === "loginBusiness"){
 
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Business");
+
+  const rows = sheet.getDataRange().getValues();
+
+  const email = data.email;
+  const password = data.password;
+
+  for(let i = 1; i < rows.length; i++){
+
+    const rowEmail = rows[i][3];      // Column D
+    const rowPassword = rows[i][14];  // Column O ✅ FIXED
+
+    if(rowEmail === email && rowPassword === password){
+
+      return ContentService.createTextOutput(
+        JSON.stringify({
+          success: true,
+          name: rows[i][6],        // Business Name (adjust if needed)
+          email: rowEmail,
+          businessType: rows[i][7],
+          status: rows[i][10]
+        })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService.createTextOutput(
+    JSON.stringify({
+      success: false,
+      message: "Invalid login"
+    })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
