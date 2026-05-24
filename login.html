@@ -1,23 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dent MVP</title>
+    <title>Login</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background:#f4f4f4;
+            padding:30px;
+            text-align:center;
+        }
+
+        .container{
+            max-width:420px;
+            margin:auto;
+            background:#fff;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            margin-bottom:20px;
+        }
+
+        button{
+            width:100%;
+            padding:12px;
+            margin:10px 0;
+            border:none;
+            cursor:pointer;
+            font-size:16px;
+            border-radius:6px;
+        }
+
+        .business{
+            background:#007bff;
+            color:#fff;
+        }
+
+        .business:hover{
+            background:#0056b3;
+        }
+
+        .candidate{
+            background:#28a745;
+            color:#fff;
+        }
+
+        .candidate:hover{
+            background:#1e7e34;
+        }
+
+        .disabled{
+            opacity:0.5;
+            pointer-events:none;
+        }
+
+        .note{
+            font-size:13px;
+            color:#666;
+            margin-top:10px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>Dent MVP</h1>
+<div class="container">
 
-<button onclick="location.href='register-candidate.html'">
-  Register as Job Seeker
-</button>
+    <h2>Select Login Type</h2>
 
-<button onclick="location.href='register-business.html'">
-  Register as Business
-</button>
+    <!-- BUSINESS LOGIN -->
+    <button class="business"
+        onclick="goBusinessLogin()">
+        Business Login
+    </button>
 
-<button onclick="location.href='login.html'">
-  Login
-</button>
+    <p class="note">
+        Access business dashboard, post shifts, and manage staff.
+    </p>
+
+    <!-- JOB SEEKER LOGIN (FUTURE) -->
+    <button class="candidate disabled">
+        Job Seeker Login (Coming Soon)
+    </button>
+
+    <p class="note">
+        Candidate portal will be enabled in next phase.
+    </p>
+
+</div>
+
+<script>
+
+function goBusinessLogin(){
+    window.location.href = "login-business.html";
+}
+
+</script>
 
 </body>
 </html>
