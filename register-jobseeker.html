@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Seeker Registration</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Job Seeker Registration</h1>
+
+    <form id="candidateForm">
+
+        <!-- BASIC DETAILS -->
+        <input type="text" id="name" placeholder="Name" required>
+
+        <input type="text" id="surname" placeholder="Surname" required>
+
+        <input type="email" id="email" placeholder="Email" required>
+
+        <input type="text" id="phone" placeholder="Phone Number" required>
+
+        <input type="text" id="address" placeholder="Address" required>
+
+        <input type="number" id="hourlyRate" placeholder="Hourly Rate Required" required>
+
+        <!-- PROFESSION (DYNAMIC) -->
+        <select id="profession" required>
+            <option value="">Loading professions...</option>
+        </select>
+
+        <!-- DYNAMIC QUESTIONS WILL LOAD HERE -->
+        <div id="dynamicQuestions"></div>
+
+        <!-- FILE UPLOAD -->
+        <h3>Upload Required Documents</h3>
+
+        <input type="file" id="files" multiple>
+
+        <small>
+            Upload CV, certificates, or required documents.
+        </small>
+
+        <br><br>
+
+        <!-- SUBMIT -->
+        <button type="submit" class="btn">
+            Submit Registration
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="index.html" class="btn secondary">
+        Back
+    </a>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

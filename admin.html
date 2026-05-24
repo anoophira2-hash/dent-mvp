@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial; padding:20px; }
+    .card { border:1px solid #ccc; padding:10px; margin:10px 0; }
+    button { margin-right:10px; }
+  </style>
+</head>
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<button onclick="load()">Load Data</button>
+
+<h2>Candidates</h2>
+<div id="candidates"></div>
+
+<h2>Businesses</h2>
+<div id="businesses"></div>
+
+<script>
+
+const scriptURL = "https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
+
+async function load(){
+
+  try{
+
+    const res = await fetch(scriptURL + "?action=getPendingUsers");
+    const data = await res.json();
+
+    console.log("DATA:", data);
+
+    render(data.candidates, "candidates");
+    render(data.businesses, "businesses");
+
+  } catch(err){
+    alert("Failed to load admin data: " + err.message);
+  }
+}
+
+function render(list, id){
+
+  const container = document.getElementById(id);
+  container.innerHTML = "";
+
+  list.forEach(row=>{
+
+    const email = row[4];
+
+    container.innerHTML += `
+      <div class="card">
+        <p>${email}</p>
+        <button onclick="approve('${email}')">Approve</button>
+      </div>
+    `;
+  });
+}
+
+async function approve(email){
+
+  await fetch(scriptURL,{
+    method:"POST",
+    body: JSON.stringify({
+      action:"approveUser",
+      email:email
+    })
+  });
+
+  load();
+}
+
+load();
+
+</script>
+
+</body>
+</html>
