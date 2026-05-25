@@ -18,9 +18,7 @@
       border-radius:10px;
     }
 
-    h1,h2{
-      margin-top:0;
-    }
+    h1,h2{ margin-top:0; }
 
     input, select, textarea{
       width:100%;
@@ -64,7 +62,7 @@
 
   <h1>Business Dashboard</h1>
 
-  <p>MVP Test Mode (No Login Yet)</p>
+  <p>MVP Test Mode</p>
 
   <hr>
 
@@ -77,15 +75,10 @@
   </select>
 
   <input type="date" id="shiftDate">
-
   <input type="time" id="startTime">
-
   <input type="time" id="endTime">
-
   <input type="number" id="hours" placeholder="Hours Required">
-
   <input type="number" id="rate" placeholder="Rate Offered Per Hour">
-
   <textarea id="notes" placeholder="Shift notes"></textarea>
 
   <button onclick="createShift()">Post Shift</button>
@@ -93,7 +86,6 @@
   <hr>
 
   <h2>Your Shifts</h2>
-
   <div id="shiftList"></div>
 
 </div>
@@ -109,39 +101,41 @@ const businessUser = {
 };
 
 /* =========================
-   CREATE SHIFT
+   CREATE SHIFT (FIXED)
 ========================= */
 async function createShift(){
 
-  const formData = new URLSearchParams();
+  const payload = {
+    action: "createShift",
+    email: businessUser.email,
+    name: businessUser.name,
+    profession: document.getElementById("profession").value,
+    shiftDate: document.getElementById("shiftDate").value,
+    startTime: document.getElementById("startTime").value,
+    endTime: document.getElementById("endTime").value,
+    hours: document.getElementById("hours").value,
+    rate: document.getElementById("rate").value,
+    notes: document.getElementById("notes").value
+  };
 
-  formData.append("action", "createShift");
-  formData.append("email", businessUser.email);
-  formData.append("name", businessUser.name);
-  formData.append("profession", document.getElementById("profession").value);
-  formData.append("shiftDate", document.getElementById("shiftDate").value);
-  formData.append("startTime", document.getElementById("startTime").value);
-  formData.append("endTime", document.getElementById("endTime").value);
-  formData.append("hours", document.getElementById("hours").value);
-  formData.append("rate", document.getElementById("rate").value);
-  formData.append("notes", document.getElementById("notes").value);
-
-  try{
+  try {
 
     const res = await fetch(scriptURL, {
       method: "POST",
-      body: formData
+      body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text);
 
     console.log("RESPONSE:", data);
 
-    if(data.success){
+    if(data && data.success){
       alert("Shift posted successfully!");
       loadShifts();
     } else {
       alert("Failed to create shift");
+      console.error(data);
     }
 
   } catch(err){
@@ -158,12 +152,11 @@ async function loadShifts(){
   try{
 
     const res = await fetch(
-      scriptURL +
-      "?action=getShifts&email=" +
-      encodeURIComponent(businessUser.email)
+      scriptURL + "?action=getShifts&email=" + encodeURIComponent(businessUser.email)
     );
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text);
 
     console.log("SHIFTS:", data);
 
@@ -178,7 +171,6 @@ async function loadShifts(){
     data.forEach(s => {
 
       const div = document.createElement("div");
-
       div.className = "card";
 
       div.innerHTML = `
