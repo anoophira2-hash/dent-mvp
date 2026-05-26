@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Candidate Dashboard</title>
+
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      padding:30px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:auto;
+      background:#fff;
+      padding:25px;
+      border-radius:10px;
+    }
+
+    h1{
+      margin-top:0;
+    }
+
+    .card{
+      background:#f8f9fa;
+      padding:15px;
+      margin-top:15px;
+      border-radius:8px;
+      border:1px solid #ddd;
+    }
+
+    button{
+      padding:10px;
+      margin-top:10px;
+      width:48%;
+      border:none;
+      cursor:pointer;
+      color:white;
+    }
+
+    .apply{
+      background:#28a745;
+    }
+
+    .reject{
+      background:#dc3545;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+    }
+
+    .status{
+      font-weight:bold;
+      margin-top:8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Candidate Dashboard</h1>
+
+  <p>Available shifts for you</p>
+
+  <div id="shiftList"></div>
+
+</div>
+
+<script>
+
+const scriptURL =
+"https://script.google.com/macros/s/AKfycbzbSOZmtaY-SnGnC4Iixf3B8nf01pnLenBU2cWY2uo3hFDlbVBYrS9c0G6k-X2Eeg2pQA/exec";
+
+/* TEMP EMAIL (replace later with login system) */
+const candidateEmail = "testcandidate@gmail.com";
+
+/* =========================
+   LOAD SHIFTS
+========================= */
+async function loadShifts(){
+
+  const res = await fetch(scriptURL + "?action=getShifts");
+  const data = await res.json();
+
+  const container = document.getElementById("shiftList");
+  container.innerHTML = "";
+
+  if(!data || data.length === 0){
+    container.innerHTML = "<p>No shifts available</p>";
+    return;
+  }
+
+  data.forEach(shift => {
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <h3>${shift.profession}</h3>
+      <p><b>Business:</b> ${shift.name}</p>
+      <p><b>Date:</b> ${shift.shiftDate}</p>
+      <p><b>Time:</b> ${shift.startTime} - ${shift.endTime}</p>
+      <p><b>Rate:</b> $${shift.rate}/hr</p>
+      <p class="status">Status: ${shift.status}</p>
+
+      <div class="row">
+        <button class="apply"
+          onclick="applyShift('${shift.shiftId}')">
+          Apply
+        </button>
+
+        <button class="reject"
+          onclick="rejectShift('${shift.shiftId}')">
+          Reject
+        </button>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+/* =========================
+   APPLY SHIFT
+========================= */
+async function applyShift(shiftId){
+
+  const url =
+    scriptURL +
+    "?action=applyShift" +
+    "&shiftId=" + encodeURIComponent(shiftId) +
+    "&email=" + encodeURIComponent(candidateEmail);
+
+  const res = await fetch(url);
+  const text = await res.text();
+
+  alert(text);
+
+  loadShifts();
+}
+
+/* =========================
+   REJECT SHIFT
+========================= */
+async function rejectShift(shiftId){
+
+  const url =
+    scriptURL +
+    "?action=rejectShift" +
+    "&shiftId=" + encodeURIComponent(shiftId) +
+    "&email=" + encodeURIComponent(candidateEmail);
+
+  const res = await fetch(url);
+  const text = await res.text();
+
+  alert(text);
+
+  loadShifts();
+}
+
+/* =========================
+   INIT
+========================= */
+loadShifts();
+
+</script>
+
+</body>
+</html>
